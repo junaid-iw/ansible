@@ -1,0 +1,61 @@
+---
+- name: Install nginx
+  hosts: all
+  become: true
+
+  tasks:
+  - name: Install PIP
+    yum:
+      name: python-pip
+      state: present
+
+  - name: Install PrettyTable
+    pip:
+      name: prettytable
+      state: present
+
+  - name: Install Flask
+    pip:
+      name: Flask
+      state: present
+      
+  # - name: Copy git files
+  #   copy:
+  #     src: /Users/junaid/team-gold-with-mikes-changes/table-tennis-ladder
+  #     dest: /home/ec2-user
+
+  - name: pkill python
+    command: pkill -f table_tennis_ladder.py
+    ignore_errors: True
+
+  # - name: change permissions
+  #   file: dest=/home/ec2-user/table-tennis-ladder/python table_tennis_ladder.py 
+  #   mode: "a+x"
+
+  - name: Install Nginx
+    yum:
+      name: nginx
+      state: present
+    
+
+  - name: Setup nginx conf
+    template:
+        src=nginx.conf.tpl
+        dest=/etc/nginx/nginx.conf
+
+  - name: start nginx
+    service:
+        name: nginx
+        state: started
+
+  - name: Execute Script
+    shell:  nohup python /home/ec2-user/table-tennis-ladder/table_tennis_ladder.py &
+    args:
+      chdir: /home/ec2-user/table-tennis-ladder/
+    ignore_errors: True
+
+  handlers:
+  - name: restart nginx
+    service:
+        name=nginx
+        state=restarted
